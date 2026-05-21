@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.vite/
+*.local
+.env
+.env.*
+!.env.example
+
+# Sticker images (399 MB) — served from public/stickers/ at runtime,
+# copied from renamed/ during build/bootstrap.
+public/stickers/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
