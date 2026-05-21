@@ -1,19 +1,11 @@
+import { AlbumDashboard } from '../components/album/AlbumDashboard';
+import { countries } from '../data/countries';
+import { getTheme } from '../data/themes';
+
 /**
- * Dashboard page — D2 will implement the full dashboard
- * with ProgressBar, CountryCard grid, and navigation.
+ * Dashboard page — renders the full AlbumDashboard
+ * with overall progress bar and 48-country card grid.
  */
 export function DashboardPage() {
-  return (
-    <div className="text-center py-12">
-      <h2 className="font-heading text-3xl font-bold text-ink mb-2">
-        🌍 Mundial Pop Album
-      </h2>
-      <p className="text-ink-muted text-lg">
-        48 countries &middot; 960 stickers &middot; 1 album to complete
-      </p>
-      <p className="text-ink-muted mt-4 text-sm">
-        Dashboard coming in D2 &mdash; country grid, progress bar, and navigation.
-      </p>
-    </div>
-  );
+  return <AlbumDashboard countries={countries} getTheme={getTheme} />;
 }
