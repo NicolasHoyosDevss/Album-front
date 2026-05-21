@@ -1,24 +1,56 @@
-import { useParams } from 'react-router-dom';
+import { useCallback } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { getStickersByTeam } from '../data/catalog';
 import { getTheme } from '../data/themes';
 import { useAlbumStore } from '../stores/albumStore';
 import { StickerGrid } from '../components/stickers/StickerGrid';
 import { ProgressBar } from '../components/album/ProgressBar';
+import { FilterTabs, type FilterValue } from '../components/album/FilterTabs';
+
+/** Valid filter values for validation. */
+const VALID_FILTERS = new Set<string>(['all', 'owned', 'missing']);
 
 /**
  * Per-country album page with themed header and sticker grid.
  *
  * - Reads `:teamCode` from the URL (e.g. /country/BRA).
+ * - Reads `?filter=` query param (all | owned | missing), defaults to "all".
  * - Injects the country's theme as CSS custom properties on a wrapper div.
  * - Shows a CountryHeader with gradient, name, and owned/missing stats.
- * - Renders the sticker grid with filter state synced via URL query param.
+ * - Renders accessible FilterTabs synced to the URL for shareability.
+ * - Renders the sticker grid filtered by the active tab.
  *
  * Waits for store hydration before rendering to prevent flicker.
  */
 export function CountryAlbumPage() {
   const { teamCode } = useParams<{ teamCode: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const hydrated = useAlbumStore((s) => s.hydrated);
   const getOwnedCountByTeam = useAlbumStore((s) => s.getOwnedCountByTeam);
+
+  // Resolve and validate filter from URL query param
+  const rawFilter = searchParams.get('filter') ?? 'all';
+  const filter: FilterValue = VALID_FILTERS.has(rawFilter)
+    ? (rawFilter as FilterValue)
+    : 'all';
+
+  const handleFilterChange = useCallback(
+    (next: FilterValue) => {
+      setSearchParams(
+        (prev) => {
+          const updated = new URLSearchParams(prev);
+          if (next === 'all') {
+            updated.delete('filter');
+          } else {
+            updated.set('filter', next);
+          }
+          return updated;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   // Don't render until the store has loaded from localStorage
   if (!hydrated) return null;
@@ -110,6 +142,9 @@ export function CountryAlbumPage() {
         <ProgressBar value={ownedCount} max={totalCount} label="complete" />
       </section>
 
+      {/* ── Filter tabs synced to URL query param ── */}
+      <FilterTabs value={filter} onChange={handleFilterChange} />
+
       {/* ── Sticker Grid ── */}
       <section aria-labelledby="sticker-grid-heading">
         <h2
@@ -118,7 +153,7 @@ export function CountryAlbumPage() {
         >
           {countryName} stickers
         </h2>
-        <StickerGrid stickers={stickers} filter="all" />
+        <StickerGrid stickers={stickers} filter={filter} />
       </section>
     </div>
   );
