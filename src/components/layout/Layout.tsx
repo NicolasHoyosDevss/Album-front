@@ -1,4 +1,5 @@
 import { Link, Outlet } from 'react-router-dom';
+import { ExportMissingButton } from '../export/ExportMissingButton';
 
 export function Layout() {
   return (
@@ -14,7 +15,8 @@ export function Layout() {
               Mundial Pop Album
             </h1>
           </div>
-          <nav aria-label="Main navigation">
+          <nav aria-label="Main navigation" className="flex items-center gap-2">
+            <ExportMissingButton />
             <Link
               to="/search"
               className="font-body text-sm font-medium text-white hover:text-neon-yellow
