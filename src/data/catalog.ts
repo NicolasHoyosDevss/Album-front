@@ -4,7 +4,11 @@ import { STICKER_ASSET_BASE_URL } from '../config/env';
 
 function withConfiguredAssetBase(path: string): string {
   if (!STICKER_ASSET_BASE_URL) return path;
-  return `${STICKER_ASSET_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+
+  const normalizedPath = path.replace(/^\/stickers\//, '/');
+  return `${STICKER_ASSET_BASE_URL}${
+    normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`
+  }`;
 }
 
 /** Full sticker catalog: 960 stickers across 48 countries. */
