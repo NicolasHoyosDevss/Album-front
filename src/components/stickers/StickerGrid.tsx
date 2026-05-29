@@ -62,7 +62,10 @@ export function StickerGrid({ stickers, filter }: StickerGridProps) {
  */
 function StickerSlotWrapper({ sticker }: { sticker: Sticker }) {
   const owned = useAlbumStore((s) => s.owned.has(sticker.id));
+  const quantity = useAlbumStore((s) => s.quantities[sticker.id] ?? 0);
   const toggleSticker = useAlbumStore((s) => s.toggleSticker);
+  const incrementSticker = useAlbumStore((s) => s.incrementSticker);
+  const decrementSticker = useAlbumStore((s) => s.decrementSticker);
 
   const handleToggle = useCallback(
     (id: StickerId) => {
@@ -71,9 +74,30 @@ function StickerSlotWrapper({ sticker }: { sticker: Sticker }) {
     [toggleSticker],
   );
 
+  const handleIncrement = useCallback(
+    (id: StickerId) => {
+      incrementSticker(id);
+    },
+    [incrementSticker],
+  );
+
+  const handleDecrement = useCallback(
+    (id: StickerId) => {
+      decrementSticker(id);
+    },
+    [decrementSticker],
+  );
+
   return (
     <div role="listitem">
-      <StickerSlot sticker={sticker} owned={owned} onToggle={handleToggle} />
+      <StickerSlot
+        sticker={sticker}
+        owned={owned}
+        quantity={quantity}
+        onToggle={handleToggle}
+        onIncrement={handleIncrement}
+        onDecrement={handleDecrement}
+      />
     </div>
   );
 }

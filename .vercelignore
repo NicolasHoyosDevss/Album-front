@@ -1,0 +1,16 @@
+node_modules
+dist
+.vite
+.git
+.env
+.env.*
+!.env.example
+Dockerfile
+docker-compose.yml
+.dockerignore
+.atl
+openspec
+renamed
+public/stickers
+*.tsbuildinfo
+npm-debug.log*

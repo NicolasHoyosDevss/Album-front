@@ -6,8 +6,14 @@ export interface StickerSlotProps {
   sticker: Sticker;
   /** Whether this sticker is currently owned. */
   owned: boolean;
-  /** Callback to toggle ownership. */
+  /** How many copies of this sticker the user has. */
+  quantity: number;
+  /** Callback to toggle ownership (legacy, for search/modal usage). */
   onToggle: (id: StickerId) => void;
+  /** Callback to increment sticker count by 1. */
+  onIncrement?: (id: StickerId) => void;
+  /** Callback to decrement sticker count by 1. */
+  onDecrement?: (id: StickerId) => void;
 }
 
 /**
@@ -31,7 +37,14 @@ function hashToRotation(id: string): number {
  * - Click/tap or Enter/Space toggles ownership.
  * - Image shows a fallback placeholder on load error.
  */
-export function StickerSlot({ sticker, owned, onToggle }: StickerSlotProps) {
+export function StickerSlot({
+  sticker,
+  owned,
+  quantity,
+  onToggle,
+  onIncrement,
+  onDecrement,
+}: StickerSlotProps) {
   const [imgError, setImgError] = useState(false);
   const [justStuck, setJustStuck] = useState(false);
   const prevOwned = useRef(owned);
@@ -40,14 +53,48 @@ export function StickerSlot({ sticker, owned, onToggle }: StickerSlotProps) {
     onToggle(sticker.id);
   }, [onToggle, sticker.id]);
 
+  const handleIncrement = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onIncrement) {
+        onIncrement(sticker.id);
+      } else {
+        onToggle(sticker.id);
+      }
+    },
+    [onIncrement, onToggle, sticker.id],
+  );
+
+  const handleDecrement = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (onDecrement) {
+        onDecrement(sticker.id);
+      }
+    },
+    [onDecrement, sticker.id],
+  );
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         handleToggle();
       }
+      if (e.key === '+' || e.key === '=') {
+        e.preventDefault();
+        if (onIncrement) {
+          onIncrement(sticker.id);
+        } else {
+          onToggle(sticker.id);
+        }
+      }
+      if (e.key === '-' && owned) {
+        e.preventDefault();
+        onDecrement?.(sticker.id);
+      }
     },
-    [handleToggle],
+    [handleToggle, onIncrement, onDecrement, sticker.id, owned],
   );
 
   // Trigger "stick" animation when transitioning from missing → owned
@@ -66,9 +113,15 @@ export function StickerSlot({ sticker, owned, onToggle }: StickerSlotProps) {
     <div
       role="button"
       tabIndex={0}
-      onClick={handleToggle}
+      onClick={handleIncrement}
       onKeyDown={handleKeyDown}
-      aria-label={`${sticker.name} — ${sticker.album_code}${owned ? ', owned' : ', missing'}`}
+      onContextMenu={(e) => {
+        if (owned) {
+          e.preventDefault();
+          onDecrement?.(sticker.id);
+        }
+      }}
+      aria-label={`${sticker.name} — ${sticker.album_code}${owned ? `, owned${quantity > 1 ? ` (${quantity} copies)` : ''}` : ', missing'}`}
       aria-pressed={owned}
       className="group relative flex flex-col items-center gap-1.5 p-3 rounded-comic
                  border-2 border-black bg-paper-light cursor-pointer
@@ -77,6 +130,41 @@ export function StickerSlot({ sticker, owned, onToggle }: StickerSlotProps) {
                  focus-visible:ring-2 focus-visible:ring-neon-blue focus-visible:ring-offset-2
                  active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
     >
+      {/* Quantity badge — shown when > 1 */}
+      {owned && quantity > 1 && (
+        <span
+          className="absolute -top-2 -right-2 z-10
+                     font-heading text-xs font-bold text-ink
+                     bg-neon-yellow border-2 border-black rounded-full
+                     px-2 py-0.5 shadow-[2px_2px_0px_#1A1A2E]"
+          aria-label={`${quantity} copies`}
+        >
+          ×{quantity}
+        </span>
+      )}
+
+      {/* Decrement button (visible on hover for owned stickers) */}
+      {owned && onDecrement && (
+        <button
+          type="button"
+          onClick={handleDecrement}
+          onKeyDown={(e) => e.stopPropagation()}
+          tabIndex={-1}
+          aria-label={`Remove one ${sticker.album_code}`}
+          className="absolute top-2 left-2 z-10
+                     w-6 h-6 flex items-center justify-center
+                     border-2 border-black rounded-full
+                     bg-neon-pink/80 hover:bg-neon-pink text-ink
+                     opacity-0 group-hover:opacity-100
+                     focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-neon-blue
+                     shadow-[2px_2px_0px_#1A1A2E]
+                     active:translate-x-0.5 active:translate-y-0.5 active:shadow-none
+                     transition-all duration-150"
+        >
+          −
+        </button>
+      )}
+
       {/* Image or placeholder */}
       <div className="relative w-full aspect-[3/4] flex items-center justify-center overflow-hidden">
         {owned ? (
@@ -121,6 +209,28 @@ export function StickerSlot({ sticker, owned, onToggle }: StickerSlotProps) {
           </div>
         )}
       </div>
+
+      {/* Increment button (visible on hover for owned stickers to add more) */}
+      {owned && onIncrement && (
+        <button
+          type="button"
+          onClick={handleIncrement}
+          onKeyDown={(e) => e.stopPropagation()}
+          tabIndex={-1}
+          aria-label={`Add another ${sticker.album_code}`}
+          className="absolute bottom-14 right-2 z-10
+                     w-6 h-6 flex items-center justify-center
+                     border-2 border-black rounded-full
+                     bg-neon-green/80 hover:bg-neon-green text-ink
+                     opacity-0 group-hover:opacity-100
+                     focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-neon-blue
+                     shadow-[2px_2px_0px_#1A1A2E]
+                     active:translate-x-0.5 active:translate-y-0.5 active:shadow-none
+                     transition-all duration-150"
+        >
+          +
+        </button>
+      )}
 
       {/* Sticker info: code + name */}
       <div className="w-full text-center mt-0.5">

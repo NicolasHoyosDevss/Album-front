@@ -1,8 +1,17 @@
 import type { Sticker, TeamCode } from './types';
 import rawCatalog from '../../album_stickers_final.json';
+import { STICKER_ASSET_BASE_URL } from '../config/env';
+
+function withConfiguredAssetBase(path: string): string {
+  if (!STICKER_ASSET_BASE_URL) return path;
+  return `${STICKER_ASSET_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+}
 
 /** Full sticker catalog: 960 stickers across 48 countries. */
-export const stickers: Sticker[] = rawCatalog as Sticker[];
+export const stickers: Sticker[] = (rawCatalog as Sticker[]).map((sticker) => ({
+  ...sticker,
+  image_path: withConfiguredAssetBase(sticker.image_path),
+}));
 
 /** Index: sticker ID → Sticker (for O(1) lookups). */
 const byId = new Map<string, Sticker>();

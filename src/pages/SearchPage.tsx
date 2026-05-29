@@ -1,4 +1,6 @@
 import { AlbumSearch } from '../components/search/AlbumSearch';
+import { AlbumSetup } from '../components/album/AlbumSetup';
+import { useAlbumStore } from '../stores/albumStore';
 
 /**
  * Search page — exact sticker code lookup across all 48 countries.
@@ -8,6 +10,15 @@ import { AlbumSearch } from '../components/search/AlbumSearch';
  * - Responsive layout with max-width container centered.
  */
 export function SearchPage() {
+  const album = useAlbumStore((s) => s.album);
+  const hydrated = useAlbumStore((s) => s.hydrated);
+
+  if (!hydrated) return null;
+
+  if (!album) {
+    return <AlbumSetup />;
+  }
+
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
       {/* Page header */}

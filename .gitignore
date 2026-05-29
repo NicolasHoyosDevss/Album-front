@@ -5,10 +5,13 @@ dist/
 .env
 .env.*
 !.env.example
+!.env.docker
+.vercel
 
 # Sticker images (399 MB) — served from public/stickers/ at runtime,
-# copied from renamed/ during build/bootstrap.
+# or from VITE_STICKER_ASSET_BASE_URL in production.
 public/stickers/
+renamed/
 
 # Editor
 .vscode/
@@ -19,3 +22,8 @@ public/stickers/
 # OS
 .DS_Store
 Thumbs.db
+tsconfig.tsbuildinfo
+
+# Agent/spec artifacts kept out of production repos unless intentionally exported.
+.atl/
+openspec/

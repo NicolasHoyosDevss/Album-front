@@ -6,6 +6,7 @@ import { useAlbumStore } from '../stores/albumStore';
 import { StickerGrid } from '../components/stickers/StickerGrid';
 import { ProgressBar } from '../components/album/ProgressBar';
 import { FilterTabs, type FilterValue } from '../components/album/FilterTabs';
+import { AlbumSetup } from '../components/album/AlbumSetup';
 
 /** Valid filter values for validation. */
 const VALID_FILTERS = new Set<string>(['all', 'owned', 'missing']);
@@ -25,6 +26,7 @@ const VALID_FILTERS = new Set<string>(['all', 'owned', 'missing']);
 export function CountryAlbumPage() {
   const { teamCode } = useParams<{ teamCode: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
+  const album = useAlbumStore((s) => s.album);
   const hydrated = useAlbumStore((s) => s.hydrated);
   const getOwnedCountByTeam = useAlbumStore((s) => s.getOwnedCountByTeam);
 
@@ -52,8 +54,12 @@ export function CountryAlbumPage() {
     [setSearchParams],
   );
 
-  // Don't render until the store has loaded from localStorage
+  // Don't render until the authenticated album has loaded.
   if (!hydrated) return null;
+
+  if (!album) {
+    return <AlbumSetup />;
+  }
 
   if (!teamCode) {
     return (

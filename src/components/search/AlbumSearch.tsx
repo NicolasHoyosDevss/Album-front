@@ -5,12 +5,21 @@ import { stickers } from '../../data/catalog';
 import { useAlbumStore } from '../../stores/albumStore';
 
 /**
+ * Normalize user input: uppercase and strip everything except letters/digits.
+ * This makes search case-insensitive and tolerant to spaces, underscores,
+ * hyphens, or any other separator (e.g. "bra_05", "BRA 05", "fra007").
+ */
+function normalizeQuery(query: string): string {
+  return query.toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+/**
  * Parse a search query into { teamCode, number }.
  * Accepts formats like "FRA007", "BRA 05", "bra05", "ARG_12", "COL7".
  * Returns null if the query doesn't match the expected pattern.
  */
 function parseQuery(query: string): { teamCode: string; number: number } | null {
-  const cleaned = query.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const cleaned = normalizeQuery(query);
   const match = cleaned.match(/^([A-Z]{3})(\d+)$/);
   if (!match) return null;
   const num = parseInt(match[2], 10);
@@ -73,7 +82,7 @@ export function AlbumSearch() {
     if (parsed) {
       const found =
         lookup.get(`${parsed.teamCode}:${parsed.number}`) ??
-        lookup.get(trimmed.toUpperCase().replace(/\s+/g, ''));
+        lookup.get(normalizeQuery(trimmed));
       if (found) {
         setResult(found);
         setNotFound(false);
@@ -82,7 +91,7 @@ export function AlbumSearch() {
     }
 
     // Fallback: direct normalized lookup
-    const normalized = trimmed.toUpperCase().replace(/\s+/g, '');
+    const normalized = normalizeQuery(trimmed);
     const fallback = lookup.get(normalized);
     if (fallback) {
       setResult(fallback);
