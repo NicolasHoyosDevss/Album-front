@@ -1,8 +1,12 @@
-﻿<div align="center">
+<p align="center">
+  <img src="./docs/assets/album-front.png" alt="Mundial Pop Album Frontend banner" />
+</p>
+
+<div align="center">
 
 # Mundial Pop Album Frontend
 
-A Vite + React frontend for a digital World Cup sticker album with Supabase Auth, backend-synced progress, search, filters, and missing-sticker export.
+A deployable Vite + React frontend for a digital World Cup sticker album: collect stickers, track progress, search exact codes, and export missing stickers.
 
 </div>
 
@@ -11,6 +15,7 @@ A Vite + React frontend for a digital World Cup sticker album with Supabase Auth
   <img src="https://img.shields.io/badge/Frontend-React-58A6FF?style=for-the-badge" alt="Frontend: React" />
   <img src="https://img.shields.io/badge/Build-Vite-8B5CF6?style=for-the-badge" alt="Build: Vite" />
   <img src="https://img.shields.io/badge/Auth-Supabase-22C55E?style=for-the-badge" alt="Auth: Supabase" />
+  <img src="https://img.shields.io/badge/Deploy-Vercel-0D1117?style=for-the-badge" alt="Deploy: Vercel" />
 </p>
 
 <div align="center">
@@ -22,42 +27,62 @@ AI Engineering - Software Architecture - Cloud - Agent Systems
 
 ## Overview
 
-This repository contains the frontend for a sticker album experience. Users can sign in, create or load their album, track owned stickers, filter by country, search exact sticker codes, and export missing stickers grouped by country.
+Mundial Pop Album Frontend is the browser application for a digital football sticker album. It combines a static sticker catalog, country-themed album pages, Supabase authentication, and a backend API for persistent album progress.
 
 <table>
 <tr>
 <td width="50%">
 
-### Album Tracking
+### Collect and Track
 
-Country dashboards, per-team progress, owned/missing filters, repeated-count support, and optimistic UI updates.
+Users can create or load an album, mark stickers as owned, increment repeated stickers, and see overall or per-country progress.
 
 </td>
 <td width="50%">
 
-### Deployment Ready
+### Search and Export
 
-Configured for Vercel with SPA rewrites, environment-based API URLs, and external sticker asset hosting support.
+Exact-code search helps locate stickers quickly, while the export flow generates a missing-sticker list grouped by country.
 
 </td>
 </tr>
 <tr>
 <td width="50%">
 
-### Auth + Backend Sync
+### Backend Synced
 
-Supabase Auth provides browser sessions. Backend requests include the Supabase access token when available.
+Zustand manages UI state and syncs album changes through a REST API using the Supabase access token.
 
 </td>
 <td width="50%">
 
-### Sticker Assets
+### Vercel Ready
 
-Large sticker images are intentionally kept out of Git. Production should use `VITE_STICKER_ASSET_BASE_URL` backed by CDN/storage.
+The repo includes SPA rewrites, build configuration, deployment docs, and CDN-ready sticker asset configuration.
 
 </td>
 </tr>
 </table>
+
+## Product Preview
+
+<p align="center">
+  <img src="./docs/assets/album-footer.png" alt="Mundial Pop Album product presentation" />
+</p>
+
+## Problem
+
+A sticker album is visual, collectible, and progress-driven. A plain checklist would technically work, but it would miss the core product feeling: browsing countries, seeing empty slots, sticking collected images, and sharing what is still missing.
+
+## Solution
+
+This frontend treats the album as a product experience rather than a data table:
+
+- Country cards show progress and visual identity.
+- Country pages behave like album sheets with owned/missing filters.
+- Sticker slots support image previews, quantity badges, and optimistic updates.
+- Search accepts practical user input formats such as `BRA 05`, `bra05`, or `FRA007`.
+- Deployment separates the app bundle from large sticker image assets.
 
 ## Architecture
 
@@ -66,21 +91,42 @@ flowchart TD
     User[User] --> App[React App]
     App --> Router[React Router]
     Router --> Pages[Dashboard / Country / Search]
-    Pages --> Store[Zustand Stores]
-    Store --> API[Backend API]
-    Store --> Auth[Supabase Auth]
+    Pages --> Components[Album UI Components]
+    Components --> AlbumStore[Zustand Album Store]
+    Components --> AuthStore[Zustand Auth Store]
+    AlbumStore --> API[Backend REST API]
+    AuthStore --> Supabase[Supabase Auth]
+    API --> Backend[(Album Backend)]
     Pages --> Catalog[Sticker Catalog JSON]
-    Catalog --> Assets[Sticker Images: public/stickers or CDN]
+    Catalog --> Assets[Sticker Images: local public folder or CDN]
 ```
 
 | Layer | Responsibility |
 |---|---|
-| `src/app` | Router and app bootstrapping. |
-| `src/pages` | Route-level screens. |
-| `src/components` | Album, sticker, layout, search, and export UI. |
-| `src/stores` | Zustand state for auth and album progress. |
-| `src/services` | Backend API client and Supabase client. |
-| `src/data` | Sticker catalog, country metadata, and themes. |
+| `src/app` | Application bootstrapping and route definitions. |
+| `src/pages` | Route-level screens for dashboard, country album, and search. |
+| `src/components` | Reusable album, sticker, layout, search, setup, and export UI. |
+| `src/stores` | Zustand auth and album state, including optimistic sync behavior. |
+| `src/services` | Backend API client and Supabase browser client. |
+| `src/data` | Sticker catalog, derived country metadata, and visual themes. |
+| `docs/assets` | README visual assets used for portfolio presentation. |
+
+## Tech Stack
+
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=react,ts,vite,tailwind,supabase,vercel,docker" alt="React, TypeScript, Vite, Tailwind, Supabase, Vercel, Docker" />
+</p>
+
+| Area | Tools |
+|---|---|
+| Frontend | React 18, React Router |
+| Language | TypeScript |
+| Styling | Tailwind CSS |
+| State | Zustand |
+| Auth | Supabase Auth |
+| Build | Vite |
+| Testing | Vitest, Testing Library |
+| Deployment | Vercel static deployment, Docker for local/dev workflows |
 
 ## Quick Start
 
@@ -138,6 +184,9 @@ See [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) for the full deployment checkli
 ```txt
 Album-frontend/
 |-- docs/
+|   |-- assets/
+|   |   |-- album-footer.png
+|   |   `-- album-front.png
 |   `-- DEPLOYMENT.md
 |-- public/
 |   `-- stickers/              # Local-only sticker assets, ignored by Git
@@ -161,24 +210,27 @@ Album-frontend/
 
 | Before | After |
 |---|---|
-| Vercel SPA routing was implicit | `vercel.json` now defines static output and route fallback |
-| Large duplicate local sticker folders could be committed accidentally | Git/Vercel ignore rules keep local assets and generated folders out |
-| Production sticker hosting was coupled to `public/stickers` | `VITE_STICKER_ASSET_BASE_URL` supports external asset hosting |
-| README only covered local basics | README now documents architecture, environment, scripts, and deployment |
+| README explained the app but had no real visual identity | README now uses actual project artwork from `docs/assets` |
+| Deployment information was present but visually flat | Deployment now sits inside a product-style technical landing page |
+| Architecture was textual only | Architecture is supported by a renderable Mermaid flow |
+| Large sticker assets could blur deployment strategy | README clearly separates source code from CDN/storage sticker assets |
 
-## Visual Assets Needed
+## Roadmap
 
-| Asset | Suggested Path | Purpose |
+| Stage | Status | Focus |
 |---|---|---|
-| Banner | `assets/banner.png` | GitHub hero identity for the project. |
-| Demo Screenshot | `assets/screenshots/dashboard.png` | Show the album dashboard in the README. |
-| Country Screenshot | `assets/screenshots/country-page.png` | Show the sticker grid and filters. |
+| Frontend foundation | Done | Vite, React, routing, catalog, Tailwind, Zustand |
+| Backend integration | Done | Supabase session and REST API sync |
+| Deployment preparation | Done | Vercel config, environment docs, external asset base URL |
+| Test coverage | Planned | Add real component/store tests beyond current setup |
+| Production assets | Planned | Upload sticker image set to CDN/storage and configure `VITE_STICKER_ASSET_BASE_URL` |
 
-Banner prompt:
+## Engineering Notes
 
-```txt
-Dark modern engineering banner for "Mundial Pop Album Frontend" by Nicolas AI Engineering Lab. Use GitHub dark background #0D1117, blue accent #58A6FF, purple accent #8B5CF6, subtle sticker album grid, football-inspired details, clean SaaS documentation style, no clutter, no cartoon style.
-```
+- Sticker image assets are intentionally not committed because the local set is large.
+- Production should serve sticker images from CDN/storage using the same `/stickers/CODE/CODE_NN.png` path structure.
+- Deep links such as `/country/ARG` work on Vercel through the configured SPA rewrite.
+- The current test command supports an empty test suite, but real tests should be added before treating coverage as mature.
 
 ## Author
 
